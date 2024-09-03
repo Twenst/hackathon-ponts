@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import render_template
 from flask import request, jsonify
+import PyPDF2
 
 
 ###
@@ -72,29 +73,24 @@ def hello_world():
 
 def read_pdf(filename):
     context = ""
-
-    # Open the PDF file
-    with open(filename) as pdf_file:
-        # Get the number of pages in the PDF file
-        num_pages = pdf_file.page_count
-
-        # Loop through each page in the PDF file
+    with open(filename, 'rb') as pdf_file:  # 'rb' for reading in binary mode
+        reader = PyPDF2.PdfReader(pdf_file)
+        num_pages = len(reader.pages)
         for page_num in range(num_pages):
-            # Get the current page
-            page = pdf_file[page_num]
-
-            # Get the text from the current page
-            page_text = page.get_text().replace("\n", "")
-
-            # Append the text to context
+            page = reader.pages[page_num]
+            page_text = page.extract_text().replace("\n", " ")
             context += page_text
     return context
 
 
 
-def ask_question_to_pdf_bis(question_user = 'Peux-tu me résumer ce texte ?'):
-    text = read_pdf('filename.pdf')
-    return gt3_completion(question_user + text)
+def ask_question_to_pdf_bis(question_user='Peux-tu me résumer ce texte ?'):
+    list_string = ['texte', 'document', 'papier', 'pdf', 'cours', 'leçon', 'question']
+    if any(s in question_user.lower() for s in list_string):
+        text = read_pdf('filename.pdf')  
+        return gt3_completion(question_user + text)
+    else:
+        return gt3_completion(question_user)
 
 
 @app.route('/prompt', methods=['POST'])
