@@ -3,6 +3,17 @@ import os
 import openai
 
 from openai import OpenAI
+from dotenv import load_dotenv
+from nltk.tokenize import sent_tokenize
+
+load_dotenv()
+
+
+def open_file(filepath):
+    with open(filepath, "r", encoding="utf-8") as infile:
+        return infile.read()
+
+
 client = OpenAI()
 
 
@@ -10,6 +21,8 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.organization = os.getenv("OPENAI_ORGANIZATION")
 
 
+
+=======
 def gt3_completion(question_user):
     response = client.chat.completions.create(
     model="gpt-3.5-turbo",
@@ -24,6 +37,3 @@ def ask_question_to_pdf(question_user = 'Peux-tu me résumer ce texte ?'):
     return None 
 
 ask_question_to_pdf()
-
-
-

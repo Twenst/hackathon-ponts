@@ -1,0 +1,33 @@
+name: Black format check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      # Étape 1 : Vérifier le code du dépôt
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Étape 2 : Configurer Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  
+
+      # Étape 3 : Installe Black
+      - name: Install Black
+        run: |
+          python -m pip install --upgrade pip
+          pip install black
+
+      # Étape 4 : Vérifie le formatage avec Black
+      - name: Run Black for format checking
+        run: black --check .
