@@ -1,3 +1,12 @@
+@font-face {
+  font-family: 'SUSE';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/suse/v1/MwQ5bhb078Wt2V9BPQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --body-background-color: #f5f6f8;
   --main-background-color: #ffffff;
@@ -5,6 +14,16 @@
   --max-body-width: 700px;
   --border-color: #cccccc;
   --secondary-color: #fff6d3;
+  --loader-bullet-size: 6px;
+}
+
+:root[data-theme="dark"] {
+  --body-background-color: #303030;
+  --main-background-color: #262626;
+  --main-color: #eceae4;
+  --max-body-width: 700px;
+  --border-color: #cccccc;
+  --secondary-color: #81764c;
   --loader-bullet-size: 6px;
 }
 
@@ -16,7 +35,7 @@ body {
   background-color: var(--body-background-color);
   padding: 0;
   margin: 0;
-  font-family: system-ui;
+  font-family: 'SUSE';
 }
 
 .main-container {
@@ -82,7 +101,7 @@ body {
   border: 3px solid var(--border-color);
   padding: 5px;
   border-radius: 5px;
-  background-color: var(--main-background-color);
+  background-color: var(--border-color);
 }
 
 .button:hover,
@@ -167,4 +186,10 @@ body {
   position: absolute;
   top: 10px;
   left: 10px;
+}
+
+.coin-droite {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
