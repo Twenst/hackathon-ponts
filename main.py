@@ -126,6 +126,22 @@ def read_pdf(filename):
 
 #     return jsonify({"answer": ai_response})
 
+@app.route('/file-transfer', methods=['POST'])
+def get_file():
+    if 'file' not in request.files:
+        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
+
+    print(file.filename)
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+    
+    return jsonify({'message': 'Fichier téléchargé avec succès.', 'filename': file.filename}), 200
+
 
 @app.route('/file_transfer',methods=['POST'])
 def knowing_text():
@@ -161,18 +177,3 @@ def handle_prompt():
     return jsonify({"answer": ai_response})
 
 
-@app.route('/file-transfer', methods=['POST'])
-def get_file():
-    if 'file' not in request.files:
-        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
-
-    file = request.files['file']
-
-    if file.filename == '':
-        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
-
-    print(file.filename)
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(file_path)
-    
-    return jsonify({'message': 'Fichier téléchargé avec succès.', 'filename': file.filename}), 200
