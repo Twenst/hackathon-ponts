@@ -32,19 +32,19 @@
       </button>
 
     </form>
-
-    <script src="{{ url_for('static', filename='prompt.js') }}"></script>
   </main>
-  <topleft>
-    <button type="button" class="button coin-gauche" id="dark-mode-button">
-      Dark Mode
-    </button>
-  </topleft>
-  <topright>
-    <button type="button" class="button coin-droite" id="pdf-button">
-      Nouveau PDF
-    </button>
-  </topright>
+  <!-- Conteneur pour les boutons dans le coin droit -->
+  <div class="coin-droite">
+    <input type="file" class="button" id="pdf-button" accept=".pdf" />
+    <button type="button" class="button" id="send-pdf-button">Envoyer PDF</button>
+    <button type="button" class="button" id="reset-button">Réinitialiser</button>
+    <p id="file-info"></p>
+  </div>
+
+  <div class="coin-gauche">
+    <button type="button" class="button" id="theme-button">Thème Sombre</button>
+  </div>
+  <script src="{{ url_for('static', filename='prompt.js') }}"></script>
 </body>
 
 </html>

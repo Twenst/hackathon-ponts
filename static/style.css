@@ -17,7 +17,7 @@
   --loader-bullet-size: 6px;
 }
 
-:root[data-theme="dark"] {
+.dark {
   --body-background-color: #303030;
   --main-background-color: #262626;
   --main-color: #eceae4;
@@ -64,7 +64,7 @@ body {
 
 .message {
   border: 3px solid var(--border-color);
-  border-radius: 5px;
+  border-radius: 15px;
   padding: 10px 15px;
 }
 
@@ -75,9 +75,9 @@ body {
 .prompt-container {
   position: fixed;
   bottom: 0px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: var(--max-body-width);
+  left: 0%;
+  transform: translateX();
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -93,14 +93,15 @@ body {
 .prompt-input {
   flex-grow: 1;
   border: 3px solid var(--border-color);
-  border-radius: 5px;
-  padding: 5px;
+  background-color: var(--border-color);
+  border-radius: 15px;
+  padding: 15px;
 }
 
 .button {
   border: 3px solid var(--border-color);
-  padding: 5px;
-  border-radius: 5px;
+  padding: 7px;
+  border-radius: 15px;
   background-color: var(--border-color);
 }
 
@@ -183,13 +184,29 @@ body {
 }
 
 .coin-gauche {
-  position: absolute;
+  position: fixed;
   top: 10px;
   left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .coin-droite {
-  position: absolute;
+  position: fixed;
   top: 10px;
   right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#send-pdf-button {
+  display: none;
+  /* Cache le bouton au chargement de la page */
+}
+
+#reset-button {
+  display: none;
+  /* Cache le bouton au chargement de la page */
 }
