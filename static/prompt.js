@@ -114,8 +114,7 @@ document.getElementById('send-pdf-button').addEventListener("click", function (e
 
   /* Envoi du fichier */
   event.preventDefault();
-  const data = new FormData(event.target);
-  data.append('file', file);
+  const data = new FormData(document.getElementById('pdf-form'));
 
   fetch("/file-transfer", {
     method: "POST",

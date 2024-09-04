@@ -34,12 +34,12 @@
     </form>
   </main>
   <!-- Conteneur pour les boutons dans le coin droit -->
-  <div class="coin-droite">
-    <input type="file" class="button" id="pdf-button" accept=".pdf" />
+  <form class="coin-droite" id="pdf-form">
+    <input type="file" class="button" id="pdf-button" accept=".pdf" name="file" />
     <button type="button" class="button" id="send-pdf-button">Envoyer PDF</button>
     <button type="button" class="button" id="reset-button">Réinitialiser</button>
     <p id="file-info"></p>
-  </div>
+  </form>
 
   <div class="coin-gauche">
     <button type="button" class="button" id="theme-button">Thème Sombre</button>
