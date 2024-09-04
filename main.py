@@ -3,8 +3,8 @@ from flask import render_template
 from flask import request, jsonify
 import PyPDF2
 
+UPLOAD_FOLDER = 'uploads'
 
-###
 import os
 import openai
 from openai import OpenAI
@@ -112,7 +112,6 @@ def handle_click_button():
 
 @app.route('/answer', methods=['POST'])
 def answer_click_button():
-    error = None
     question = request.form['question']
     rep = request.form['prompt']
 
@@ -121,3 +120,18 @@ def answer_click_button():
     return jsonify({"answer": ai_response})
 
 
+@app.route('/file-transfer', methods=['POST'])
+def get_file():
+    if 'file' not in request.files:
+        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
+
+    print(file.filename)
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+    
+    return jsonify({'message': 'Fichier téléchargé avec succès.', 'filename': file.filename}), 200

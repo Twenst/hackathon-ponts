@@ -2,7 +2,6 @@ const promptForm = document.getElementById("prompt-form");
 const submitButton = document.getElementById("submit-button");
 const questionButton = document.getElementById("question-button");
 const messagesContainer = document.getElementById("messages-container");
-// const darkModeButton = document.getElementById("dark-mode-button");
 
 const appendHumanMessage = (message) => {
   const humanMessageElement = document.createElement("div");
@@ -54,18 +53,6 @@ const handlePrompt = async (event) => {
   });
 };
 
-// /* const handleDarkMode = async (event) => {
-
-// };
-
-// darkModeButton.addEventListener("click", handleDarkMode); */
-
-// document.getElementById("dark-mode-button").onclick = () => {
-//   var currentTheme = document.documentElement.getAttribute("data-theme");
-//   var newTheme = currentTheme === "dark" ? "light" : "dark";
-//   document.documentElement.setAttribute("data-theme", newTheme);
-// };
-
 promptForm.addEventListener("submit", handlePrompt);
 
 const handleQuestionClick = async (event) => {
@@ -84,3 +71,53 @@ const handleQuestionClick = async (event) => {
 };
 
 questionButton.addEventListener("click", handleQuestionClick);
+
+document.getElementById('pdf-button').addEventListener('change', function () {
+  var sendPdfButton = document.getElementById('send-pdf-button');
+  var resetPdfButton = document.getElementById('reset-button');
+  if (this.files.length > 0) {
+    sendPdfButton.style.display = 'block'; // Affiche le bouton si un fichier est sélectionné
+    resetPdfButton.style.display = 'block';
+  } else {
+    sendPdfButton.style.display = 'none'; // Cache le bouton si aucun fichier n'est sélectionné
+    resetPdfButton.style.display = 'none';
+  }
+});
+
+document.getElementById('reset-button').addEventListener('click', function () {
+  var sendPdfButton = document.getElementById('send-pdf-button');
+  var resetPdfButton = document.getElementById('reset-button');
+  var fileInput = document.getElementById('pdf-button');
+  var fileInfo = document.getElementById('file-info');
+  fileInput.value = ''; // Réinitialise la valeur de l'input file
+  sendPdfButton.style.display = 'none'; // Cache le bouton si aucun fichier n'est sélectionné
+  resetPdfButton.style.display = 'none';
+  fileInfo.innerHTML = ``;
+});
+
+document.getElementById('send-pdf-button').addEventListener("click", function (event) {
+  var fileInput = document.getElementById('pdf-button');
+  var file = fileInput.files[0];
+
+  /* Affichage */
+  var fileInfo = document.getElementById('file-info');
+  // Obtenir les informations sur le fichier
+  var fileName = file.name;
+  var fileSize = file.size; // Taille en octets
+
+  // Afficher les informations sur le fichier
+  fileInfo.innerHTML = `
+       <strong>Nom du fichier :</strong> ${fileName}<br>
+       <strong>Taille du fichier :</strong> ${fileSize} octets
+   `;
+  document.getElementById('send-pdf-button').style.display = 'none';
+
+  /* Envoi du fichier */
+  event.preventDefault();
+  const data = new FormData(document.getElementById('pdf-form'));
+
+  fetch("/file-transfer", {
+    method: "POST",
+    body: data
+  });
+});
