@@ -17,8 +17,8 @@ def open_file(filepath):
 client = OpenAI()
 
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.organization = os.getenv("OPENAI_ORGANIZATION")
+# TODO: The 'openai.organization' option isn't read in the client API. You will need to pass it when you instantiate the client, e.g. 'OpenAI(organization=os.getenv("OPENAI_ORGANIZATION"))'
+# openai.organization = os.getenv("OPENAI_ORGANIZATION")
 
 def gt3_completion(question_user):
     response = client.chat.completions.create(

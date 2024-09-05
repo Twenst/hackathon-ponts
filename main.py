@@ -1,16 +1,16 @@
-from flask import Flask,session
+from flask import Flask, session
 from flask import render_template
 from flask import request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from openai import OpenAI
 import PyPDF2
+import os
 
 UPLOAD_FOLDER = 'uploads'
 
-import os
-import openai
-from openai import OpenAI
-client = OpenAI()
 
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Initialisation de Flask et SQLAlchemy
 app = Flask(__name__)
@@ -18,9 +18,130 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///conversations.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+class Session(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    messages = db.relationship('Message', backref='session', lazy=True)
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.organization = os.getenv("OPENAI_ORGANIZATION")
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(db.String(10))  # 'user' ou 'assistant'
+    content = db.Column(db.Text, nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey('session.id'), nullable=False)
+
+
+with app.app_context():
+    db.create_all()
+
+@app.route("/")
+def hello_world():
+    # Si une session est en cours, sauvegarder ses messages comme "terminée"
+    if 'session_id' in session:
+        current_session = Session.query.get(session['session_id'])
+        if current_session:
+            # La session actuelle est terminée, donc on peut la conserver telle quelle
+            pass
+    
+    # Créer une nouvelle session
+    new_session = Session()
+    db.session.add(new_session)
+    db.session.commit()
+
+    # Réinitialiser la session Flask avec la nouvelle session et conversation vide
+    session['session_id'] = new_session.id
+    session['conversation'] = []
+
+    # Récupérer toutes les sessions pour l'historique
+    sessions = Session.query.order_by(Session.timestamp.desc()).all()
+
+    return render_template('index.html', sessions=sessions)
+
+
+
+
+@app.route('/prompt', methods=['POST'])
+def handle_prompt():
+    user_prompt = request.form['prompt']
+
+    # Vérifier si 'conversation' existe dans la session, sinon l'initialiser
+    if 'conversation' not in session:
+        session['conversation'] = []
+
+    # Vérifier si une session de conversation est active, sinon en créer une nouvelle
+    if 'session_id' not in session:
+        new_session = Session()
+        db.session.add(new_session)
+        db.session.commit()  # Sauvegarder la session
+        session['session_id'] = new_session.id
+
+    # Ajouter la question de l'utilisateur à la session 'conversation'
+    session['conversation'].append({"role": "user", "content": user_prompt})
+
+    # Appel à l'API OpenAI pour obtenir une réponse de l'IA
+    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=session['conversation'])
+    assistant_response = response.choices[0].message.content
+
+    # Ajouter la réponse de l'IA à la conversation
+    session['conversation'].append({"role": "assistant", "content": assistant_response})
+
+    # Sauvegarder la conversation dans la base de données sous forme de messages
+    current_session = Session.query.get(session['session_id'])
+    user_message = Message(role="user", content=user_prompt, session=current_session)
+    assistant_message = Message(role="assistant", content=assistant_response, session=current_session)
+
+    db.session.add(user_message)
+    db.session.add(assistant_message)
+    db.session.commit()
+
+    # Retourner la réponse de l'IA au client
+    return jsonify({"answer": assistant_response})
+
+
+
+@app.route('/session/<int:id>', methods=['GET'])
+def get_session(id):
+    current_session = Session.query.get_or_404(id)
+    messages = [{"role": msg.role, "content": msg.content} for msg in current_session.messages]
+    return jsonify({"messages": messages})
+
+# Fonction pour lire et interpréter un fichier PDF
+def read_pdf(filename):
+    context = ""
+    with open(filename, 'rb') as pdf_file:
+        reader = PyPDF2.PdfReader(pdf_file)
+        num_pages = len(reader.pages)
+        for page_num in range(num_pages):
+            page = reader.pages[page_num]
+            page_text = page.extract_text().replace("\n", " ")
+            context += page_text
+    return context
+
+@app.route('/file-transfer', methods=['POST'])
+def interpret_file():
+    if 'file' not in request.files:
+        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
+
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+
+    try:
+        text = read_pdf(file_path)
+        session['conversation'] = [{"role": "system", "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {text}"}]
+    except Exception as e:
+        return jsonify({'message': 'Erreur lors du traitement du fichier.', 'error': str(e)}), 500
+
+    return jsonify({
+        'message': 'Fichier téléchargé et traité avec succès.',
+        'filename': file.filename,
+    }), 200
+
+
+
 
 
 # Définition du modèle Conversation
@@ -45,17 +166,19 @@ def ask_question_to_pdf(question_user = 'Peux-tu me résumer ce texte ?'):
     return gt3_completion(question_user + text)
 ###
 
-
-
-app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-app.config['SESSION_PERMANENT'] = False  
-app.config['SESSION_COOKIE_SECURE'] = False 
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_COOKIE_SECURE'] = False
 
-@app.route("/")
-def hello_world():
-    conversations = Conversation.query.all()
-    return render_template('index.html', conversations=conversations)
+
+
+@app.route('/conversation/<int:id>', methods=['GET'])
+def get_conversation(id):
+    conversation = Conversation.query.get_or_404(id)
+    return jsonify({
+        'question': conversation.question,
+        'answer': conversation.answer
+    })
 
 
 ################### version texte cours 
@@ -99,7 +222,7 @@ def hello_world():
 #     else:
 #         assist_response = gt3_completion(question_user)
 #     return assist_response
-    
+
 
 
 
@@ -133,16 +256,7 @@ def hello_world():
 
 
 ################### version finale
-def read_pdf(filename):
-    context = ""
-    with open(filename, 'rb') as pdf_file:  # 'rb' for reading in binary mode
-        reader = PyPDF2.PdfReader(pdf_file)
-        num_pages = len(reader.pages)
-        for page_num in range(num_pages):
-            page = reader.pages[page_num]
-            page_text = page.extract_text().replace("\n", " ")
-            context += page_text
-    return context
+
 
 
 def gt3_completion_historiq(historiq_conv):
@@ -151,54 +265,6 @@ def gt3_completion_historiq(historiq_conv):
         messages=historiq_conv
     )
     return response.choices[0].message.content
-
-
-@app.route('/file-transfer', methods=['POST'])
-def interpret_file():
-    if 'file' not in request.files:
-        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
-
-    file = request.files['file']
-
-    if file.filename == '':
-        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
-
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(file_path)
-
-    print(file_path)
-
-    try:
-        text = read_pdf(file_path)
-        session['conversation'] = [{"role": "system", "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {text}"}]
-
-    except Exception as e:
-        return jsonify({'message': 'Erreur lors du traitement du fichier.', 'error': str(e)}), 500
-    
-    return jsonify({
-        'message': 'Fichier téléchargé et traité avec succès.',
-        'filename': file.filename,
-    }), 200
-
-
-
-@app.route('/prompt', methods=['POST'])
-def handle_prompt():
-    user_prompt = request.form['prompt']
-
-    # if 'conversation' not in session:
-    #     session['conversation'] = []
-
-    session['conversation'] = session['conversation']+[{"role": "user", "content": user_prompt}]
-
-    historiq_conv = session['conversation']
-
-    ai_response = gt3_completion_historiq(historiq_conv)
-
-    session['conversation'].append({"role": "assistant", "content": ai_response})
-
-    return jsonify({"answer": ai_response})
-
 
 
 # @app.route('/question', methods=['GET'])
