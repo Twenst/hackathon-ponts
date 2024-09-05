@@ -3,47 +3,92 @@
 
 <head>
   <title>Ma page</title>
-
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    /* Ajoute du style pour le conteneur principal */
+    .main-container {
+      display: flex;
+    }
+
+    /* Section historique des conversations */
+    .history-container {
+      width: 30%;
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-right: 2px solid #ccc;
+      overflow-y: auto;
+      height: 100vh;
+    }
+
+    .history-item {
+      margin-bottom: 10px;
+    }
+
+    .history-item .question {
+      font-weight: bold;
+    }
+
+    .history-item .answer {
+      font-style: italic;
+      margin-top: 5px;
+    }
+
+    /* Section chat */
+    .chat-container {
+      width: 70%;
+      padding: 20px;
+    }
+  </style>
 </head>
 
 <body>
   <main class="main-container">
-    <header class="header">
-      <h1 class="header-title">Mon A.I. de mémoire</h1>
-    </header>
-
-    <section id="messages-container" class="messages-container">
-      <div class="message message-ai">
-        Je suis ton AIssistant de cours personnel ! Pose-moi une question sur
-        le cours et je te répondrai.
+    <!-- Section pour l'historique des conversations -->
+    <section id="history-container" class="history-container">
+      <h2>Historique des conversations</h2>
+      <div id="history">
+        <!-- Les éléments d'historique seront injectés ici -->
+        {% for conversation in conversations %}
+        <div class="history-item">
+          <div class="question">Q: {{ conversation.question }}</div>
+          <div class="answer">R: {{ conversation.answer }}</div>
+        </div>
+        {% endfor %}
       </div>
     </section>
 
-    <form id="prompt-form" class="prompt-container">
-      <label for="prompt" class="prompt-label">Message</label>
+    <!-- Section chat -->
+    <section class="chat-container">
+      <header class="header">
+        <h1 class="header-title">Mon A.I. de mémoire</h1>
+      </header>
 
-      <input type="text" id="prompt" name="prompt" class="prompt-input" autocomplete="off" />
+      <section id="messages-container" class="messages-container">
+        <div class="message message-ai">
+          Je suis ton AIssistant de cours personnel ! Pose-moi une question sur le cours et je te répondrai.
+        </div>
+      </section>
 
-      <button type="submit" class="button" id="submit-button">Envoyer</button>
+      <form id="prompt-form" class="prompt-container">
+        <label for="prompt" class="prompt-label">Message</label>
 
-      <button type="button" class="button" id="question-button">
-        Pose-moi une question !
-      </button>
+        <input type="text" id="prompt" name="prompt" class="prompt-input" autocomplete="off" />
 
-    </form>
+        <button type="submit" class="button" id="submit-button">Envoyer</button>
 
-    <script src="{{ url_for('static', filename='prompt.js') }}"></script>
+        <button type="button" class="button" id="question-button">Pose-moi une question !</button>
+      </form>
+
+      <script src="{{ url_for('static', filename='prompt.js') }}"></script>
+    </section>
   </main>
+
   <topleft>
-    <button type="button" class="button coin-gauche" id="dark-mode-button">
-      Dark Mode
-    </button>
+    <button type="button" class="button coin-gauche" id="dark-mode-button">Dark Mode</button>
   </topleft>
+
   <topright>
-    <button type="button" class="button coin-droite" id="pdf-button">
-      Nouveau PDF
-    </button>
+    <button type="button" class="button coin-droite" id="pdf-button">Nouveau PDF</button>
   </topright>
 </body>
 
