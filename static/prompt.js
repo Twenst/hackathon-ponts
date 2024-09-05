@@ -138,6 +138,40 @@ document.getElementById('send-pdf-button').addEventListener("click", function (e
   });
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const body = document.body;
+  const toggleButton = document.getElementById('theme-button');
+
+  // Récupérer le thème actuel depuis localStorage ou par défaut 'light'
+  const currentTheme = localStorage.getItem('theme') || 'light';
+
+  // Appliquer le thème actuel à la page
+  if (currentTheme === 'dark') {
+    body.classList.add('dark-theme');
+  }
+
+  // Mettre à jour le texte du bouton en fonction du thème actuel
+  toggleButton.textContent = currentTheme === 'dark' ? "Thème Clair" : "Thème Sombre";
+});
+
+document.getElementById('theme-button').addEventListener("click", function () {
+  const body = document.body;
+  const toggleButton = document.getElementById('theme-button');
+
+  // Vérifier si le thème sombre est déjà activé
+  if (body.classList.contains('dark-theme')) {
+    // Si oui, on passe en mode clair
+    body.classList.remove('dark-theme');
+    localStorage.setItem('theme', 'light');
+    toggleButton.textContent = "Thème Sombre";
+  } else {
+    // Sinon, on passe en mode sombre
+    body.classList.add('dark-theme');
+    localStorage.setItem('theme', 'dark');
+    toggleButton.textContent = "Thème Clair";
+  }
+});
+
 
 
 

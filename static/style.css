@@ -18,14 +18,19 @@
   --loader-bullet-size: 6px;
 }
 
-.dark {
-  --body-background-color: #303030;
-  --main-background-color: #262626;
+body.dark-theme {
+  --body-background-color: #262626;
+  --main-background-color: #303030;
   --main-color: #eceae4;
   --max-body-width: 700px;
-  --border-color: #cccccc;
-  --secondary-color: #81764c;
+  --border-color: #414141;
+  --message-ai-color: #747474;
+  --secondary-color: #64a279;
   --loader-bullet-size: 6px;
+}
+
+body.dark-theme .text {
+  color: var(--main-color);
 }
 
 * {
@@ -67,7 +72,7 @@ body {
 .message {
   border: 3px solid var(--message-ai-color);
   background-color: var(--message-ai-color);
-  border-radius: 15px;
+  border-radius: 12px 12px 12px 0px;
   padding: 10px 15px;
 
 }
@@ -76,6 +81,7 @@ body {
   border: 3px solid var(--secondary-color);
   background-color: var(--secondary-color);
   transform: translateX(33%);
+  border-radius: 12px 12px 0px 12px;
 }
 
 .prompt-container {
@@ -100,20 +106,22 @@ body {
   flex-grow: 1;
   border: 3px solid var(--border-color);
   background-color: var(--border-color);
-  border-radius: 15px;
+  border-radius: 12px;
   padding: 15px;
+  color: var(--main-color);
 }
 
 .button {
   border: 3px solid var(--border-color);
+  color: var(--main-color);
   padding: 7px;
-  border-radius: 15px;
+  border-radius: 12px;
   background-color: var(--border-color);
 }
 
 .button:hover,
 .button:active {
-  background-color: var(--body-background-color);
+  background-color: var(--message-ai-color);
   cursor: pointer;
 }
 
