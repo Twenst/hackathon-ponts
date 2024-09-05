@@ -262,3 +262,7 @@ body {
     /* Les lettres se stabilisent */
   }
 }
+
+.file-info {
+  color: var(--main-color);
+}

@@ -2,8 +2,8 @@
 <html lang="fr">
 
 <head>
-  <title>GPT pour révision</title>
-
+  <title>My IAssistant Partner</title>
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 
@@ -15,7 +15,7 @@
 
     <section id="messages-container" class="messages-container">
       <div class="message message-ai">
-        Je suis ton AIssistant de cours personnel ! Pose-moi une question sur
+        Je suis ton IAssistant de cours personnel ! Pose-moi une question sur
         le cours et je te répondrai.
       </div>
     </section>
@@ -38,7 +38,7 @@
     <input type="file" class="button" id="pdf-button" accept=".pdf" name="file" />
     <button type="button" class="button" id="send-pdf-button">Envoyer PDF</button>
     <button type="button" class="button" id="reset-button">Réinitialiser</button>
-    <p id="file-info"></p>
+    <p id="file-info" class="file-info"></p>
   </form>
 
   <div class="coin-gauche">
