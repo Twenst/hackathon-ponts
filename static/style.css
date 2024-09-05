@@ -216,3 +216,41 @@ body {
   display: none;
   /* Cache le bouton au chargement de la page */
 }
+
+
+
+
+
+
+
+
+
+
+/**************************/
+
+
+.fade-text span {
+  opacity: 0;
+  display: inline;
+  /* Utiliser inline pour les mots */
+  animation: fadeIn 0.2s forwards;
+  /* Durée de l'animation plus longue pour les mots */
+  animation-delay: calc(0.1s * var(--word-index));
+  /* Délai progressif entre les mots */
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+    /* Les lettres montent légèrement */
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    /* Les lettres se stabilisent */
+  }
+}

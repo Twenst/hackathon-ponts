@@ -1,4 +1,4 @@
-from flask import Flask,session
+from flask import Flask,session,make_response
 from flask import render_template
 from flask import request, jsonify
 import PyPDF2
@@ -35,9 +35,6 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 app.config['SESSION_PERMANENT'] = False  
 app.config['SESSION_COOKIE_SECURE'] = False 
 
-@app.route("/")
-def hello_world():
-    return render_template('index.html')
 
 
 ################### version texte cours 
@@ -115,9 +112,17 @@ def hello_world():
 
 
 ################### version finale
+
+
+@app.route("/")
+def hello_world():
+    session['conversation'] = []
+    return render_template('index.html')
+
+
 def read_pdf(filename):
     context = ""
-    with open(filename, 'rb') as pdf_file:  # 'rb' for reading in binary mode
+    with open(filename, 'rb') as pdf_file:  
         reader = PyPDF2.PdfReader(pdf_file)
         num_pages = len(reader.pages)
         for page_num in range(num_pages):
@@ -152,7 +157,7 @@ def interpret_file():
 
     try:
         text = read_pdf(file_path)
-        session['conversation'] = [{"role": "system", "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {text}"}]
+        session['conversation'] = session['conversation']+[{"role": "system", "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {text}"}]
 
     except Exception as e:
         return jsonify({'message': 'Erreur lors du traitement du fichier.', 'error': str(e)}), 500
@@ -168,35 +173,50 @@ def interpret_file():
 def handle_prompt():
     user_prompt = request.form['prompt']
 
-    # if 'conversation' not in session:
-    #     session['conversation'] = []
-
     session['conversation'] = session['conversation']+[{"role": "user", "content": user_prompt}]
 
     historiq_conv = session['conversation']
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
-    session['conversation'].append({"role": "assistant", "content": ai_response})
+    session['conversation'] = session['conversation']+[{"role": "assistant", "content": ai_response}]
 
     return jsonify({"answer": ai_response})
 
 
 
-# @app.route('/question', methods=['GET'])
-# def handle_click_button():
-#     error = None
-#     ai_response = ask_question_to_pdf_bis('Pose moi une question !')
+@app.route('/question', methods=['GET'])
+def handle_click_question_button():
 
-#     return jsonify({"answer": ai_response})
+    session['conversation'] = session['conversation']+[{"role": "user", "content": "Pose moi une question sur le texte!"}]
+
+    historiq_conv = session['conversation']
+
+    ai_response = gt3_completion_historiq(historiq_conv)
+
+    session['conversation'] = session['conversation']+[{"role": "user", "content": ai_response}]
+
+    return jsonify({"answer": ai_response})
 
 
-# @app.route('/answer', methods=['POST'])
-# def answer_click_button():
-#     error = None
-#     question = request.form['question']
-#     rep = request.form['prompt']
 
-#     ai_response = ask_question_to_pdf_bis(f'Analyse ma réponse {rep} par rapport à ta question {question}. Ma réponse à ta question est - elle correcte?')
+@app.route('/answer', methods=['POST'])
+def answer_click_button():
+    user_prompt = request.form['prompt']
+    session['conversation'] = session['conversation']+[{"role": "user", "content": user_prompt}]
 
-#     return jsonify({"answer": ai_response})
+    historiq_conv = session['conversation']
+
+    ai_response = gt3_completion_historiq(historiq_conv)
+
+    session['conversation'] = session['conversation']+[{"role": "user", "content": ai_response}]
+
+    return jsonify({"answer": ai_response})
+
+
+@app.route('/delete-session-cookie', methods=['POST'])
+def delete_session_cookie():
+    session['conversation'] = []
+
+    return '', 204
+

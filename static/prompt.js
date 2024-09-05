@@ -23,7 +23,14 @@ const appendAIMessage = async (messagePromise) => {
 
   // Replace the loader with the answer
   loaderElement.classList.remove("loader");
+
+  /////
+  loaderElement.classList.add("fade-text");
+
   loaderElement.innerHTML = messageToAppend;
+
+  /////
+  applyFadeEffect(loaderElement);
 };
 
 const handlePrompt = async (event) => {
@@ -84,7 +91,10 @@ document.getElementById('pdf-button').addEventListener('change', function () {
   }
 });
 
-document.getElementById('reset-button').addEventListener('click', function () {
+
+/* reset button */
+
+document.getElementById('reset-button').addEventListener('click', function (event) {
   var sendPdfButton = document.getElementById('send-pdf-button');
   var resetPdfButton = document.getElementById('reset-button');
   var fileInput = document.getElementById('pdf-button');
@@ -93,7 +103,13 @@ document.getElementById('reset-button').addEventListener('click', function () {
   sendPdfButton.style.display = 'none'; // Cache le bouton si aucun fichier n'est sélectionné
   resetPdfButton.style.display = 'none';
   fileInfo.innerHTML = ``;
+
+  fetch("/delete-session-cookie", {
+    method: "POST",
+    credentials: "same-origin",
+  })
 });
+
 
 document.getElementById('send-pdf-button').addEventListener("click", function (event) {
   var fileInput = document.getElementById('pdf-button');
@@ -121,3 +137,28 @@ document.getElementById('send-pdf-button').addEventListener("click", function (e
     body: data
   });
 });
+
+
+
+
+/////////////////////////////////
+const applyFadeEffect = (messageElement) => {
+  const text = messageElement.innerText;
+  messageElement.innerHTML = ''; // Efface le texte actuel
+
+  // Diviser le texte en mots, en tenant compte des espaces
+  const words = text.split(' ');
+
+  words.forEach((word, index) => {
+    const span = document.createElement('span');
+    span.textContent = word; // Ajouter le mot entier
+    span.style.setProperty('--word-index', index); // Définit l'index pour le délai de chaque mot
+    messageElement.appendChild(span);
+
+    // Ajouter un espace après chaque mot sauf le dernier
+    if (index < words.length - 1) {
+      messageElement.appendChild(document.createTextNode(' '));
+    }
+  });
+};
+
