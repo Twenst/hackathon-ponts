@@ -40,7 +40,7 @@ def hello_world():
     return render_template('index.html')
 
 
-#### version texte cours
+################### version texte cours 
 
 # @app.route('/prompt', methods=['POST'])
 # def answer():
@@ -70,21 +70,7 @@ def hello_world():
 #     return jsonify({"answer": ai_response})
 
 
-#### version PDF 
-
-
-
-def read_pdf(filename):
-    context = ""
-    with open(filename, 'rb') as pdf_file:  # 'rb' for reading in binary mode
-        reader = PyPDF2.PdfReader(pdf_file)
-        num_pages = len(reader.pages)
-        for page_num in range(num_pages):
-            page = reader.pages[page_num]
-            page_text = page.extract_text().replace("\n", " ")
-            context += page_text
-    return context
-
+################### version PDF unique ENPC 
 
 
 # def ask_question_to_pdf_bis(question_user='Peux-tu me résumer ce texte ?'):
@@ -126,29 +112,19 @@ def read_pdf(filename):
 
 #     return jsonify({"answer": ai_response})
 
-@app.route('/file-transfer', methods=['POST'])
-def get_file():
-    if 'file' not in request.files:
-        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
-
-    file = request.files['file']
-
-    if file.filename == '':
-        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
-
-    print(file.filename)
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(file_path)
-    
-    return jsonify({'message': 'Fichier téléchargé avec succès.', 'filename': file.filename}), 200
 
 
-@app.route('/file_transfer',methods=['POST'])
-def knowing_text():
-    text = read_pdf(get_file()['filename'])
-    assist_response = gt3_completion('Je te donne ce texte à étudier' + text)
-    return jsonify({"answer": assist_response}) 
-
+################### version finale
+def read_pdf(filename):
+    context = ""
+    with open(filename, 'rb') as pdf_file:  # 'rb' for reading in binary mode
+        reader = PyPDF2.PdfReader(pdf_file)
+        num_pages = len(reader.pages)
+        for page_num in range(num_pages):
+            page = reader.pages[page_num]
+            page_text = page.extract_text().replace("\n", " ")
+            context += page_text
+    return context
 
 
 def gt3_completion_historiq(historiq_conv):
@@ -157,6 +133,38 @@ def gt3_completion_historiq(historiq_conv):
         messages=historiq_conv
     )
     return response.choices[0].message.content
+
+
+@app.route('/file-transfer', methods=['POST'])
+def interpret_file():
+    if 'file' not in request.files:
+        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
+
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+
+    print(file_path)
+
+    try:
+        text = read_pdf(file_path)
+        assist_response = gt3_completion_historiq(f"Je te donne ce texte à étudier : {text}")
+        print(assist_response)
+        
+    except Exception as e:
+        return jsonify({'message': 'Erreur lors du traitement du fichier.', 'error': str(e)}), 500
+    
+    return jsonify({
+        'message': 'Fichier téléchargé et traité avec succès.',
+        'filename': file.filename,
+        'answer': assist_response
+    }), 200
+
+
 
 
 @app.route('/prompt', methods=['POST'])
