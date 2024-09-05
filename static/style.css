@@ -23,10 +23,14 @@ body.dark-theme {
   --main-background-color: #303030;
   --main-color: #eceae4;
   --max-body-width: 700px;
-  --border-color: #b3b3b3;
+  --border-color: #414141;
   --message-ai-color: #747474;
-  --secondary-color: #4c815e;
+  --secondary-color: #64a279;
   --loader-bullet-size: 6px;
+}
+
+body.dark-theme .text {
+  color: var(--main-color);
 }
 
 * {
@@ -104,10 +108,12 @@ body {
   background-color: var(--border-color);
   border-radius: 12px;
   padding: 15px;
+  color: var(--main-color);
 }
 
 .button {
   border: 3px solid var(--border-color);
+  color: var(--main-color);
   padding: 7px;
   border-radius: 12px;
   background-color: var(--border-color);
@@ -115,7 +121,7 @@ body {
 
 .button:hover,
 .button:active {
-  background-color: var(--body-background-color);
+  background-color: var(--message-ai-color);
   cursor: pointer;
 }
 
