@@ -152,18 +152,15 @@ def interpret_file():
 
     try:
         text = read_pdf(file_path)
-        assist_response = gt3_completion_historiq(f"Je te donne ce texte à étudier : {text}")
-        print(assist_response)
-        
+        session['conversation'] = [{"role": "system", "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {text}"}]
+
     except Exception as e:
         return jsonify({'message': 'Erreur lors du traitement du fichier.', 'error': str(e)}), 500
     
     return jsonify({
         'message': 'Fichier téléchargé et traité avec succès.',
         'filename': file.filename,
-        'answer': assist_response
     }), 200
-
 
 
 
@@ -171,8 +168,8 @@ def interpret_file():
 def handle_prompt():
     user_prompt = request.form['prompt']
 
-    if 'conversation' not in session:
-        session['conversation'] = []
+    # if 'conversation' not in session:
+    #     session['conversation'] = []
 
     session['conversation'] = session['conversation']+[{"role": "user", "content": user_prompt}]
 
@@ -185,3 +182,21 @@ def handle_prompt():
     return jsonify({"answer": ai_response})
 
 
+
+# @app.route('/question', methods=['GET'])
+# def handle_click_button():
+#     error = None
+#     ai_response = ask_question_to_pdf_bis('Pose moi une question !')
+
+#     return jsonify({"answer": ai_response})
+
+
+# @app.route('/answer', methods=['POST'])
+# def answer_click_button():
+#     error = None
+#     question = request.form['question']
+#     rep = request.form['prompt']
+
+#     ai_response = ask_question_to_pdf_bis(f'Analyse ma réponse {rep} par rapport à ta question {question}. Ma réponse à ta question est - elle correcte?')
+
+#     return jsonify({"answer": ai_response})
