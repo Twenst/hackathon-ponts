@@ -4,10 +4,12 @@
 <head>
   <title>Ma page</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     /* Ajoute du style pour le conteneur principal */
     .main-container {
       display: flex;
+
     }
 
     /* Section historique des conversations */
@@ -21,22 +23,79 @@
     }
 
     .history-item {
-      margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    cursor: pointer;
     }
 
-    .history-item .question {
-      font-weight: bold;
+    .delete-icon {
+    color: red;
+    cursor: pointer;
+    margin-left: 10px;
     }
 
-    .history-item .answer {
-      font-style: italic;
-      margin-top: 5px;
+    .delete-icon:hover {
+    color: darkred;
     }
+
 
     /* Section chat */
     .chat-container {
       width: 70%;
       padding: 20px;
+    }
+
+    /* Style pour la fenêtre modale */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      padding-top: 100px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* Style pour le conteneur des boutons */
+    .coin-droite,
+    .coin-gauche {
+      position: fixed;
+      bottom: 10px;
+    }
+
+    .coin-droite {
+      right: 10px;
+    }
+
+    .coin-gauche {
+      left: 10px;
     }
   </style>
 </head>
@@ -48,10 +107,15 @@
       <h2>Historique des conversations</h2>
       <div id="history">
         <!-- Les éléments d'historique seront injectés ici -->
-        {% for conversation in conversations %}
-        <div class="history-item">
-          <div class="question">Q: {{ conversation.question }}</div>
-          <div class="answer">R: {{ conversation.answer }}</div>
+        {% for session in sessions %}
+        <div class="history-item" data-id="{{ session.id }}" onclick="openModal({{ session.id }})">
+          <div class="session-title">
+              Session {{ session.id }} - {{ session.timestamp.strftime('%Y-%m-%d %H:%M') }}
+              <!-- Icône de suppression avec Font Awesome -->
+              <span class="delete-icon" onclick="event.stopPropagation(); deleteSession({{ session.id }})">
+                  <i class="fas fa-trash"></i> <!-- Icône de poubelle -->
+              </span>
+          </div>
         </div>
         {% endfor %}
       </div>
@@ -76,12 +140,25 @@
 
         <button type="submit" class="button" id="submit-button">Envoyer</button>
 
-      <button type="button" class="button" id="question-button">
-        Pose-moi une question !
-      </button>
+        <button type="button" class="button" id="question-button">
+          Pose-moi une question !
+        </button>
 
-    </form>
+      </form>
+    </section>
   </main>
+
+  <!-- Fenêtre modale pour afficher les conversations -->
+  <div id="conversationModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>Conversation complète</h2>
+      <div id="modal-body">
+        <!-- Le contenu de la conversation sera injecté ici -->
+      </div>
+    </div>
+  </div>
+
   <!-- Conteneur pour les boutons dans le coin droit -->
   <form class="coin-droite" id="pdf-form">
     <input type="file" class="button" id="pdf-button" accept=".pdf" name="file" />
@@ -90,10 +167,62 @@
     <p id="file-info"></p>
   </form>
 
+  <!-- Bouton pour changer de thème dans le coin gauche -->
   <div class="coin-gauche">
     <button type="button" class="button" id="theme-button">Thème Sombre</button>
   </div>
+
+  <!-- Inclusion du script JS -->
   <script src="{{ url_for('static', filename='prompt.js') }}"></script>
+  <script>
+    // Fonction pour ouvrir la fenêtre modale
+    function openModal(sessionId) {
+      // Ici, tu pourrais faire une requête Ajax pour charger la conversation complète
+      fetch(`/session/${sessionId}`)
+        .then(response => response.json())
+        .then(data => {
+          let modalContent = '';
+          data.messages.forEach(message => {
+            modalContent += `<strong>${message.role === 'user' ? 'Utilisateur' : 'IA'}:</strong> ${message.content}<br>`;
+          });
+          document.getElementById('modal-body').innerHTML = modalContent;
+          document.getElementById('conversationModal').style.display = 'block';
+        });
+    }
+
+    // Fonction pour fermer la fenêtre modale
+    function closeModal() {
+      document.getElementById('conversationModal').style.display = 'none';
+    }
+
+    function deleteSession(sessionId) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette session ?')) {
+        fetch(`/delete-session/${sessionId}`, {
+          method: 'DELETE',
+        })
+        .then(response => {
+          if (response.ok) {
+            // Supprimer l'élément de l'historique de la page
+            document.querySelector(`.history-item[data-id="${sessionId}"]`).remove();
+          } else {
+            console.error('Erreur lors de la suppression de la session');
+          }
+        })
+        .catch(error => {
+          console.error('Erreur lors de la suppression :', error);
+        });
+      }
+    }
+
+
+    // Fermer la modale en cliquant en dehors de la boîte de dialogue
+    window.onclick = function (event) {
+      const modal = document.getElementById('conversationModal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    }
+  </script>
 </body>
 
 </html>

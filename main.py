@@ -181,6 +181,17 @@ def get_conversation(id):
     })
 
 
+@app.route('/delete-session/<int:id>', methods=['DELETE'])
+def delete_session(id):
+    session_to_delete = Session.query.get_or_404(id)
+
+    # Supprimer la session et les messages associés
+    db.session.delete(session_to_delete)
+    db.session.commit()
+
+    return jsonify({'message': 'Session supprimée avec succès'}), 200
+
+
 ################### version texte cours 
 
 # @app.route('/prompt', methods=['POST'])
