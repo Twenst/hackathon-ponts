@@ -13,6 +13,7 @@
   --main-color: #2a303b;
   --max-body-width: 700px;
   --border-color: #cccccc;
+  --message-ai-color: #e6e6e6;
   --secondary-color: #fff6d3;
   --loader-bullet-size: 6px;
 }
@@ -59,17 +60,22 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 30px;
+  margin-bottom: 60px;
+  width: 75%;
 }
 
 .message {
-  border: 3px solid var(--border-color);
+  border: 3px solid var(--message-ai-color);
+  background-color: var(--message-ai-color);
   border-radius: 15px;
   padding: 10px 15px;
+
 }
 
 .message-human {
+  border: 3px solid var(--secondary-color);
   background-color: var(--secondary-color);
+  transform: translateX(33%);
 }
 
 .prompt-container {
