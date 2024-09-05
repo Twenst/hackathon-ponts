@@ -20,9 +20,6 @@ client = OpenAI()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.organization = os.getenv("OPENAI_ORGANIZATION")
 
-
-
-=======
 def gt3_completion(question_user):
     response = client.chat.completions.create(
     model="gpt-3.5-turbo",

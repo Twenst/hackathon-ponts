@@ -1,11 +1,11 @@
-from flask import Flask
+from flask import Flask,session
 from flask import render_template
 from flask import request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import PyPDF2
 
+UPLOAD_FOLDER = 'uploads'
 
-###
 import os
 import openai
 from openai import OpenAI
@@ -46,13 +46,19 @@ def ask_question_to_pdf(question_user = 'Peux-tu me résumer ce texte ?'):
 ###
 
 
+
+app = Flask(__name__)
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app.config['SESSION_PERMANENT'] = False  
+app.config['SESSION_COOKIE_SECURE'] = False 
+
 @app.route("/")
 def hello_world():
     conversations = Conversation.query.all()
     return render_template('index.html', conversations=conversations)
 
 
-#### version texte cours
+################### version texte cours 
 
 # @app.route('/prompt', methods=['POST'])
 # def answer():
@@ -82,10 +88,51 @@ def hello_world():
 #     return jsonify({"answer": ai_response})
 
 
-#### version PDF 
+################### version PDF unique ENPC 
+
+
+# def ask_question_to_pdf_bis(question_user='Peux-tu me résumer ce texte ?'):
+#     list_string = ['texte', 'document', 'papier', 'pdf', 'cours', 'leçon', 'question']
+#     if any(s in question_user.lower() for s in list_string):
+#         text = read_pdf('filename.pdf')  
+#         assist_response = gt3_completion(question_user + text)
+#     else:
+#         assist_response = gt3_completion(question_user)
+#     return assist_response
+    
 
 
 
+# @app.route('/prompt', methods=['POST'])
+# def answer():
+#     error = None
+#     ai_response = ask_question_to_pdf_bis(request.form['prompt'])
+
+#     return jsonify({"answer": ai_response})
+
+
+
+# @app.route('/question', methods=['GET'])
+# def handle_click_button():
+#     error = None
+#     ai_response = ask_question_to_pdf_bis('Pose moi une question !')
+
+#     return jsonify({"answer": ai_response})
+
+
+# @app.route('/answer', methods=['POST'])
+# def answer_click_button():
+#     error = None
+#     question = request.form['question']
+#     rep = request.form['prompt']
+
+#     ai_response = ask_question_to_pdf_bis(f'Analyse ma réponse {rep} par rapport à ta question {question}. Ma réponse à ta question est - elle correcte?')
+
+#     return jsonify({"answer": ai_response})
+
+
+
+################### version finale
 def read_pdf(filename):
     context = ""
     with open(filename, 'rb') as pdf_file:  # 'rb' for reading in binary mode
@@ -98,39 +145,76 @@ def read_pdf(filename):
     return context
 
 
+def gt3_completion_historiq(historiq_conv):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=historiq_conv
+    )
+    return response.choices[0].message.content
 
-def ask_question_to_pdf_bis(question_user='Peux-tu me résumer ce texte ?'):
-    list_string = ['texte', 'document', 'papier', 'pdf', 'cours', 'leçon', 'question']
-    if any(s in question_user.lower() for s in list_string):
-        text = read_pdf('filename.pdf')  
-        return gt3_completion(question_user + text)
-    else:
-        return gt3_completion(question_user)
+
+@app.route('/file-transfer', methods=['POST'])
+def interpret_file():
+    if 'file' not in request.files:
+        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
+
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+
+    print(file_path)
+
+    try:
+        text = read_pdf(file_path)
+        session['conversation'] = [{"role": "system", "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {text}"}]
+
+    except Exception as e:
+        return jsonify({'message': 'Erreur lors du traitement du fichier.', 'error': str(e)}), 500
+    
+    return jsonify({
+        'message': 'Fichier téléchargé et traité avec succès.',
+        'filename': file.filename,
+    }), 200
+
 
 
 @app.route('/prompt', methods=['POST'])
-def answer():
-    error = None
-    ai_response = ask_question_to_pdf_bis(request.form['prompt'])
+def handle_prompt():
+    user_prompt = request.form['prompt']
+
+    # if 'conversation' not in session:
+    #     session['conversation'] = []
+
+    session['conversation'] = session['conversation']+[{"role": "user", "content": user_prompt}]
+
+    historiq_conv = session['conversation']
+
+    ai_response = gt3_completion_historiq(historiq_conv)
+
+    session['conversation'].append({"role": "assistant", "content": ai_response})
 
     return jsonify({"answer": ai_response})
 
 
 
-@app.route('/question', methods=['GET'])
-def handle_click_button():
-    error = None
-    ai_response = ask_question_to_pdf_bis('Pose moi une question !')
+# @app.route('/question', methods=['GET'])
+# def handle_click_button():
+#     error = None
+#     ai_response = ask_question_to_pdf_bis('Pose moi une question !')
 
-    return jsonify({"answer": ai_response})
+#     return jsonify({"answer": ai_response})
 
 
-@app.route('/answer', methods=['POST'])
-def answer_click_button():
-    error = None
-    question = request.form['question']
-    rep = request.form['prompt']
+# @app.route('/answer', methods=['POST'])
+# def answer_click_button():
+#     error = None
+#     question = request.form['question']
+#     rep = request.form['prompt']
 
-    ai_response = ask_question_to_pdf_bis(f'Analyse ma réponse {rep} par rapport à ta question {question}. Ma réponse à ta question est - elle correcte?')
+#     ai_response = ask_question_to_pdf_bis(f'Analyse ma réponse {rep} par rapport à ta question {question}. Ma réponse à ta question est - elle correcte?')
 
-    return jsonify({"answer": ai_response})
+#     return jsonify({"answer": ai_response})
