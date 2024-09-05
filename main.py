@@ -1,43 +1,32 @@
-from flask import Flask,session,make_response
+from flask import Flask, session
 from flask import render_template
 from flask import request, jsonify
 import PyPDF2
-
-UPLOAD_FOLDER = 'uploads'
-
 import os
 import openai
 from openai import OpenAI
+
+UPLOAD_FOLDER = "uploads"
 client = OpenAI()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.organization = os.getenv("OPENAI_ORGANIZATION")
 
 
-
 def gt3_completion(question_user):
     response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": question_user}]
+        model="gpt-3.5-turbo", messages=[{"role": "user", "content": question_user}]
     )
     return response.choices[0].message.content
-
-text = "Les voitures électriques offrent plusieurs avantages par rapport aux voitures à moteur thermique : 1. **Zéro émissions locales :** Les voitures électriques ne produisent pas d'émissions d'échappement locales, réduisant ainsi la pollution de l'air et les effets sur la santé. 2. **Moins de dépendance aux combustibles fossiles :** Les voitures électriques utilisent l'électricité, qui peut provenir de sources renouvelables comme le soleil et le vent, réduisant la dépendance aux combustibles fossiles.3. **Coûts de fonctionnement réduits :** Les voitures électriques ont moins de pièces mobiles et nécessitent moins d'entretien par rapport aux voitures à moteur thermique, ce qui peut réduire les coûts à long terme. 4. **Performance instantanée :** Les voitures électriques offrent un couple élevé dès le départ, ce qui signifie une accélération rapide et fluide sans la nécessité de changer de vitesses. 5. **Conduite silencieuse :** Les moteurs électriques sont beaucoup plus silencieux que les moteurs thermiques, offrant une expérience de conduite plus paisible. 6. **Amélioration de l'efficacité énergétique :** Les voitures électriques convertissent plus efficacement l'énergie électrique en mouvement par rapport aux moteurs à combustion interne. 7. **Réduction des émissions de gaz à effet de serre :** Même en tenant compte de l'émission de CO2 liée à la production d'électricité, les voitures électriques ont tendance à produire moins d'émissions de gaz à effet de serre sur leur cycle de vie par rapport aux voitures à essence. 8. **Innovation technologique :** Les voitures électriques stimulent le développement de nouvelles technologies, telles que les batteries plus performantes et les systèmes de recharge avancés. 9. **Réduction du bruit urbain :** La diminution du bruit des véhicules électriques contribue à réduire le niveau de bruit dans les zones urbaines. 10. **Subventions et incitations :** Dans de nombreux endroits, les voitures électriques bénéficient d'incitations gouvernementales, telles que des réductions fiscales ou des voies réservées. Il est important de noter que la transition vers les voitures électriques implique également des défis, tels que l'infrastructure de recharge en expansion, la gestion des matériaux des batteries et l'autonomie limitée par rapport aux voitures à essence sur de longs trajets. Cependant, les avantages en matière d'environnement et d'efficacité continuent de renforcer l'attrait des voitures électriques pour l'avenir de la mobilité."
-
-def ask_question_to_pdf(question_user = 'Peux-tu me résumer ce texte ?'):
-    return gt3_completion(question_user + text)
-###
-
 
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-app.config['SESSION_PERMANENT'] = False  
-app.config['SESSION_COOKIE_SECURE'] = False 
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_COOKIE_SECURE"] = False
 
 
-
-################### version texte cours 
+# version texte cours
 
 # @app.route('/prompt', methods=['POST'])
 # def answer():
@@ -45,7 +34,6 @@ app.config['SESSION_COOKIE_SECURE'] = False
 #     ai_response = ask_question_to_pdf(request.form['prompt'])
 
 #     return jsonify({"answer": ai_response})
-
 
 
 # @app.route('/question', methods=['GET'])
@@ -62,24 +50,23 @@ app.config['SESSION_COOKIE_SECURE'] = False
 #     question = request.form['question']
 #     rep = request.form['prompt']
 
-#     ai_response = ask_question_to_pdf(f'Analyse ma réponse {rep} par rapport à ta question {question}. Ma réponse à ta question est - elle correcte?')
+#     ai_response = ask_question_to_pdf(f'Analyse ma réponse {rep} par rapport à ta
+# question {question}. Ma réponse à ta question est - elle correcte?')
 
 #     return jsonify({"answer": ai_response})
 
 
-################### version PDF unique ENPC 
+# version PDF unique ENPC
 
 
 # def ask_question_to_pdf_bis(question_user='Peux-tu me résumer ce texte ?'):
 #     list_string = ['texte', 'document', 'papier', 'pdf', 'cours', 'leçon', 'question']
 #     if any(s in question_user.lower() for s in list_string):
-#         text = read_pdf('filename.pdf')  
+#         text = read_pdf('filename.pdf')
 #         assist_response = gt3_completion(question_user + text)
 #     else:
 #         assist_response = gt3_completion(question_user)
 #     return assist_response
-    
-
 
 
 # @app.route('/prompt', methods=['POST'])
@@ -88,7 +75,6 @@ app.config['SESSION_COOKIE_SECURE'] = False
 #     ai_response = ask_question_to_pdf_bis(request.form['prompt'])
 
 #     return jsonify({"answer": ai_response})
-
 
 
 # @app.route('/question', methods=['GET'])
@@ -105,24 +91,24 @@ app.config['SESSION_COOKIE_SECURE'] = False
 #     question = request.form['question']
 #     rep = request.form['prompt']
 
-#     ai_response = ask_question_to_pdf_bis(f'Analyse ma réponse {rep} par rapport à ta question {question}. Ma réponse à ta question est - elle correcte?')
+#     ai_response = ask_question_to_pdf_bis(f'Analyse ma réponse {rep} par rapport à ta
+# question {question}. Ma réponse à ta question est - elle correcte?')
 
 #     return jsonify({"answer": ai_response})
 
 
-
-################### version finale
+# version finale
 
 
 @app.route("/")
 def hello_world():
-    session['conversation'] = []
-    return render_template('index.html')
+    session["conversation"] = []
+    return render_template("index.html")
 
 
 def read_pdf(filename):
     context = ""
-    with open(filename, 'rb') as pdf_file:  
+    with open(filename, "rb") as pdf_file:
         reader = PyPDF2.PdfReader(pdf_file)
         num_pages = len(reader.pages)
         for page_num in range(num_pages):
@@ -134,21 +120,20 @@ def read_pdf(filename):
 
 def gt3_completion_historiq(historiq_conv):
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=historiq_conv
+        model="gpt-3.5-turbo", messages=historiq_conv
     )
     return response.choices[0].message.content
 
 
-@app.route('/file-transfer', methods=['POST'])
+@app.route("/file-transfer", methods=["POST"])
 def interpret_file():
-    if 'file' not in request.files:
-        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
+    if "file" not in request.files:
+        return jsonify({"message": "Aucun fichier trouvé."}), 400
 
-    file = request.files['file']
+    file = request.files["file"]
 
-    if file.filename == '':
-        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
+    if file.filename == "":
+        return jsonify({"message": "Aucun fichier sélectionné."}), 400
 
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(file_path)
@@ -157,66 +142,89 @@ def interpret_file():
 
     try:
         text = read_pdf(file_path)
-        session['conversation'] = session['conversation']+[{"role": "system", "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {text}"}]
+        session["conversation"] = session["conversation"] + [
+            {
+                "role": "system",
+                "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {text}",
+            }
+        ]
 
     except Exception as e:
-        return jsonify({'message': 'Erreur lors du traitement du fichier.', 'error': str(e)}), 500
-    
-    return jsonify({
-        'message': 'Fichier téléchargé et traité avec succès.',
-        'filename': file.filename,
-    }), 200
+        return (
+            jsonify(
+                {"message": "Erreur lors du traitement du fichier.", "error": str(e)}
+            ),
+            500,
+        )
+
+    return (
+        jsonify(
+            {
+                "message": "Fichier téléchargé et traité avec succès.",
+                "filename": file.filename,
+            }
+        ),
+        200,
+    )
 
 
-
-@app.route('/prompt', methods=['POST'])
+@app.route("/prompt", methods=["POST"])
 def handle_prompt():
-    user_prompt = request.form['prompt']
+    user_prompt = request.form["prompt"]
 
-    session['conversation'] = session['conversation']+[{"role": "user", "content": user_prompt}]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": user_prompt}
+    ]
 
-    historiq_conv = session['conversation']
+    historiq_conv = session["conversation"]
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
-    session['conversation'] = session['conversation']+[{"role": "assistant", "content": ai_response}]
+    session["conversation"] = session["conversation"] + [
+        {"role": "assistant", "content": ai_response}
+    ]
 
     return jsonify({"answer": ai_response})
 
 
-
-@app.route('/question', methods=['GET'])
+@app.route("/question", methods=["GET"])
 def handle_click_question_button():
 
-    session['conversation'] = session['conversation']+[{"role": "user", "content": "Pose moi une question sur le texte!"}]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": "Pose moi une question sur le texte!"}
+    ]
 
-    historiq_conv = session['conversation']
+    historiq_conv = session["conversation"]
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
-    session['conversation'] = session['conversation']+[{"role": "user", "content": ai_response}]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": ai_response}
+    ]
 
     return jsonify({"answer": ai_response})
 
 
-
-@app.route('/answer', methods=['POST'])
+@app.route("/answer", methods=["POST"])
 def answer_click_button():
-    user_prompt = request.form['prompt']
-    session['conversation'] = session['conversation']+[{"role": "user", "content": user_prompt}]
+    user_prompt = request.form["prompt"]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": user_prompt}
+    ]
 
-    historiq_conv = session['conversation']
+    historiq_conv = session["conversation"]
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
-    session['conversation'] = session['conversation']+[{"role": "user", "content": ai_response}]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": ai_response}
+    ]
 
     return jsonify({"answer": ai_response})
 
 
-@app.route('/delete-session-cookie', methods=['POST'])
+@app.route("/delete-session-cookie", methods=["POST"])
 def delete_session_cookie():
-    session['conversation'] = []
+    session["conversation"] = []
 
-    return '', 204
-
+    return "", 204
