@@ -108,11 +108,11 @@
       <div id="history">
         <!-- Les éléments d'historique seront injectés ici -->
         {% for session in sessions %}
-        <div class="history-item" data-id="{{ session.id }}" onclick="openModal({{ session.id }})">
+        <div class="history-item" data-id="{{ session.id }}" onclick="openModal({{session.id}})">
           <div class="session-title">
               Session {{ session.id }} - {{ session.timestamp.strftime('%Y-%m-%d %H:%M') }}
               <!-- Icône de suppression avec Font Awesome -->
-              <span class="delete-icon" onclick="event.stopPropagation(); deleteSession({{ session.id }})">
+              <span class="delete-icon" onclick="event.stopPropagation(); deleteSession({{session.id}})">
                   <i class="fas fa-trash"></i> <!-- Icône de poubelle -->
               </span>
           </div>
