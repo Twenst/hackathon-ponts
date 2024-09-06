@@ -1,13 +1,10 @@
 from flask import Flask, session
-from flask import Flask, session
 from flask import render_template
 from flask import request, jsonify
 import PyPDF2
 import os
 import openai
 from openai import OpenAI
-
-UPLOAD_FOLDER = "uploads"
 client = OpenAI()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -114,12 +111,10 @@ app.config['SESSION_COOKIE_SECURE'] = False
 #                   ['question']
 #     if any(s in question_user.lower() for s in list_string):
 #         text = read_pdf('filename.pdf')
-#         text = read_pdf('filename.pdf')
 #         assist_response = gt3_completion(question_user + text)
 #     else:
 #         assist_response = gt3_completion(question_user)
 #     return assist_response
-
 
 
 # @app.route('/prompt', methods=['POST'])
@@ -157,13 +152,13 @@ app.config['SESSION_COOKIE_SECURE'] = False
 
 @app.route("/")
 def hello_world():
-    session["conversation"] = []
-    return render_template("index.html")
+    session['conversation'] = []
+    return render_template('index.html')
 
 
 def read_pdf(filename):
     context = ""
-    with open(filename, "rb") as pdf_file:
+    with open(filename, 'rb') as pdf_file:  
         reader = PyPDF2.PdfReader(pdf_file)
         num_pages = len(reader.pages)
         for page_num in range(num_pages):
@@ -175,20 +170,21 @@ def read_pdf(filename):
 
 def gt3_completion_historiq(historiq_conv):
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo", messages=historiq_conv
+        model="gpt-3.5-turbo",
+        messages=historiq_conv
     )
     return response.choices[0].message.content
 
 
-@app.route("/file-transfer", methods=["POST"])
+@app.route('/file-transfer', methods=['POST'])
 def interpret_file():
-    if "file" not in request.files:
-        return jsonify({"message": "Aucun fichier trouvé."}), 400
+    if 'file' not in request.files:
+        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
 
-    file = request.files["file"]
+    file = request.files['file']
 
-    if file.filename == "":
-        return jsonify({"message": "Aucun fichier sélectionné."}), 400
+    if file.filename == '':
+        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
 
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(file_path)
@@ -219,14 +215,14 @@ def interpret_file():
 
 @app.route('/prompt', methods=['POST'])
 def handle_prompt():
-    user_prompt = request.form["prompt"]
+    user_prompt = request.form['prompt']
 
     session['conversation'] = session['conversation'] + [{
         "role": "user",
         "content": user_prompt
     }]
 
-    historiq_conv = session["conversation"]
+    historiq_conv = session['conversation']
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
@@ -245,7 +241,7 @@ def handle_click_question_button():
         "content": "Pose moi une question sur le texte!"
     }]
 
-    historiq_conv = session["conversation"]
+    historiq_conv = session['conversation']
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
@@ -266,7 +262,7 @@ def answer_click_button():
         "content": user_prompt
     }]
 
-    historiq_conv = session["conversation"]
+    historiq_conv = session['conversation']
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
@@ -278,8 +274,8 @@ def answer_click_button():
     return jsonify({"answer": ai_response})
 
 
-@app.route("/delete-session-cookie", methods=["POST"])
+@app.route('/delete-session-cookie', methods=['POST'])
 def delete_session_cookie():
-    session["conversation"] = []
+    session['conversation'] = []
 
     return '', 204
