@@ -3,10 +3,10 @@ name: Black format check
 on:
   push:
     branches:
-      - main
+      - main ci-tit
   pull_request:
     branches:
-      - main
+      - main ci-tit
 
 jobs:
   black:
