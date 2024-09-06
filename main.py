@@ -147,7 +147,7 @@ app.config['SESSION_COOKIE_SECURE'] = False
 #     return jsonify({"answer": ai_response})
 
 
-# Routes - VERSION PDF sans mémoire conversationnelle ###################
+# Routes - VERSION PDF avec mémoire conversationnelle ###################
 
 
 @app.route("/")
