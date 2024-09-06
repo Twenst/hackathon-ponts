@@ -17,8 +17,7 @@ openai.organization = os.getenv("OPENAI_ORGANIZATION")
 
 def gt3_completion(question_user):
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": question_user}]
+        model="gpt-3.5-turbo", messages=[{"role": "user", "content": question_user}]
     )
     return response.choices[0].message.content
 
@@ -64,7 +63,7 @@ text = (
 )
 
 
-def ask_question_to_pdf(question_user='Peux-tu me résumer ce texte ?'):
+def ask_question_to_pdf(question_user="Peux-tu me résumer ce texte ?"):
     print(gt3_completion(question_user + text))
     return None
 
