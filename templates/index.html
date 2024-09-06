@@ -2,119 +2,31 @@
 <html lang="fr">
 
 <head>
-  <title>Ma page</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    /* Ajoute du style pour le conteneur principal */
-    .main-container {
-      display: flex;
-
-    }
-
-    /* Section historique des conversations */
-    .history-container {
-      width: 30%;
-      background-color: #f0f0f0;
-      padding: 10px;
-      border-right: 2px solid #ccc;
-      overflow-y: auto;
-      height: 100vh;
-    }
-
-    .history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    cursor: pointer;
-    }
-
-    .delete-icon {
-    color: red;
-    cursor: pointer;
-    margin-left: 10px;
-    }
-
-    .delete-icon:hover {
-    color: darkred;
-    }
-
-
-    /* Section chat */
-    .chat-container {
-      width: 70%;
-      padding: 20px;
-    }
-
-    /* Style pour la fenêtre modale */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1;
-      padding-top: 100px;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0, 0, 0, 0.4);
-    }
-
-    .modal-content {
-      background-color: #fff;
-      margin: auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-    }
-
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus {
-      color: black;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    /* Style pour le conteneur des boutons */
-    .coin-droite,
-    .coin-gauche {
-      position: fixed;
-      bottom: 10px;
-    }
-
-    .coin-droite {
-      right: 10px;
-    }
-
-    .coin-gauche {
-      left: 10px;
-    }
-  </style>
+  <title>My IAssistant Partner</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+  <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}" type="image/png">
+  <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}" type="image/png">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+  <link rel=" stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 
 <body>
-  <main class="main-container">
+  <main class="main-container-hist">
     <!-- Section pour l'historique des conversations -->
     <section id="history-container" class="history-container">
-      <h2>Historique des conversations</h2>
+      <h1>
+        <p>&ensp;</p>Historique des conversations
+      </h1>
       <div id="history">
         <!-- Les éléments d'historique seront injectés ici -->
         {% for session in sessions %}
-        <div class="history-item" data-id="{{ session.id }}" onclick="openModal({{session.id}})">
+        <div class="history-item" data-id="{{ session.id }}">
           <div class="session-title">
-              Session {{ session.id }} - {{ session.timestamp.strftime('%Y-%m-%d %H:%M') }}
-              <!-- Icône de suppression avec Font Awesome -->
-              <span class="delete-icon" onclick="event.stopPropagation(); deleteSession({{session.id}})">
-                  <i class="fas fa-trash"></i> <!-- Icône de poubelle -->
-              </span>
+            Session {{ session.id }} - {{ session.timestamp.strftime('%Y-%m-%d %H:%M') }}
+            <!-- Icône de suppression avec Font Awesome -->
+            <span class="delete-icon" data-id="{{ session.id }}">
+              <i class="fas fa-trash"></i> <!-- Icône de poubelle -->
+            </span>
           </div>
         </div>
         {% endfor %}
@@ -122,14 +34,15 @@
     </section>
 
     <!-- Section chat -->
-    <section class="chat-container">
+    <section class="main-container">
       <header class="header">
         <h1 class="header-title">Mon A.I. de mémoire</h1>
       </header>
 
       <section id="messages-container" class="messages-container">
         <div class="message message-ai">
-          Je suis ton AIssistant de cours personnel ! Pose-moi une question sur le cours et je te répondrai.
+          Je suis ton IAssistant de cours personnel ! Pose-moi une question sur
+          le cours et je te répondrai.
         </div>
       </section>
 
@@ -174,55 +87,6 @@
 
   <!-- Inclusion du script JS -->
   <script src="{{ url_for('static', filename='prompt.js') }}"></script>
-  <script>
-    // Fonction pour ouvrir la fenêtre modale
-    function openModal(sessionId) {
-      // Ici, tu pourrais faire une requête Ajax pour charger la conversation complète
-      fetch(`/session/${sessionId}`)
-        .then(response => response.json())
-        .then(data => {
-          let modalContent = '';
-          data.messages.forEach(message => {
-            modalContent += `<strong>${message.role === 'user' ? 'Utilisateur' : 'IA'}:</strong> ${message.content}<br>`;
-          });
-          document.getElementById('modal-body').innerHTML = modalContent;
-          document.getElementById('conversationModal').style.display = 'block';
-        });
-    }
-
-    // Fonction pour fermer la fenêtre modale
-    function closeModal() {
-      document.getElementById('conversationModal').style.display = 'none';
-    }
-
-    function deleteSession(sessionId) {
-      if (confirm('Êtes-vous sûr de vouloir supprimer cette session ?')) {
-        fetch(`/delete-session/${sessionId}`, {
-          method: 'DELETE',
-        })
-        .then(response => {
-          if (response.ok) {
-            // Supprimer l'élément de l'historique de la page
-            document.querySelector(`.history-item[data-id="${sessionId}"]`).remove();
-          } else {
-            console.error('Erreur lors de la suppression de la session');
-          }
-        })
-        .catch(error => {
-          console.error('Erreur lors de la suppression :', error);
-        });
-      }
-    }
-
-
-    // Fermer la modale en cliquant en dehors de la boîte de dialogue
-    window.onclick = function (event) {
-      const modal = document.getElementById('conversationModal');
-      if (event.target === modal) {
-        modal.style.display = 'none';
-      }
-    }
-  </script>
 </body>
 
 </html>

@@ -23,7 +23,14 @@ const appendAIMessage = async (messagePromise) => {
 
   // Replace the loader with the answer
   loaderElement.classList.remove("loader");
+
+  /////
+  loaderElement.classList.add("fade-text");
+
   loaderElement.innerHTML = messageToAppend;
+
+  /////
+  applyFadeEffect(loaderElement);
 };
 
 const handlePrompt = async (event) => {
@@ -84,7 +91,7 @@ document.getElementById('pdf-button').addEventListener('change', function () {
   }
 });
 
-document.getElementById('reset-button').addEventListener('click', function () {
+document.getElementById('reset-button').addEventListener('click', function (event) {
   var sendPdfButton = document.getElementById('send-pdf-button');
   var resetPdfButton = document.getElementById('reset-button');
   var fileInput = document.getElementById('pdf-button');
@@ -93,6 +100,11 @@ document.getElementById('reset-button').addEventListener('click', function () {
   sendPdfButton.style.display = 'none'; // Cache le bouton si aucun fichier n'est sélectionné
   resetPdfButton.style.display = 'none';
   fileInfo.innerHTML = ``;
+
+  fetch("/delete-session-cookie", {
+    method: "POST",
+    credentials: "same-origin",
+  })
 });
 
 document.getElementById('send-pdf-button').addEventListener("click", function (event) {
@@ -121,3 +133,122 @@ document.getElementById('send-pdf-button').addEventListener("click", function (e
     body: data
   });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const body = document.body;
+  const toggleButton = document.getElementById('theme-button');
+
+  // Récupérer le thème actuel depuis localStorage ou par défaut 'light'
+  const currentTheme = localStorage.getItem('theme') || 'light';
+
+  // Appliquer le thème actuel à la page
+  if (currentTheme === 'dark') {
+    body.classList.add('dark-theme');
+  }
+
+  // Mettre à jour le texte du bouton en fonction du thème actuel
+  toggleButton.textContent = currentTheme === 'dark' ? "Thème Clair" : "Thème Sombre";
+});
+
+document.getElementById('theme-button').addEventListener("click", function () {
+  const body = document.body;
+  const toggleButton = document.getElementById('theme-button');
+
+  // Vérifier si le thème sombre est déjà activé
+  if (body.classList.contains('dark-theme')) {
+    // Si oui, on passe en mode clair
+    body.classList.remove('dark-theme');
+    localStorage.setItem('theme', 'light');
+    toggleButton.textContent = "Thème Sombre";
+  } else {
+    // Sinon, on passe en mode sombre
+    body.classList.add('dark-theme');
+    localStorage.setItem('theme', 'dark');
+    toggleButton.textContent = "Thème Clair";
+  }
+});
+
+/* HISTORIQUE TRANIE */
+
+document.addEventListener('DOMContentLoaded', function () {
+
+  // Fonction pour ouvrir la modal
+  function openModal(sessionId) {
+    // Votre code pour ouvrir la modal avec la sessionId
+    console.log('Ouvrir la modal pour la session : ' + sessionId);
+  }
+
+  // Fonction pour supprimer la session
+  function deleteSession(sessionId) {
+    // Votre code pour supprimer la session avec la sessionId
+    console.log('Supprimer la session : ' + sessionId);
+  }
+
+  // Attacher les gestionnaires d'événements aux éléments d'historique
+  const historyItems = document.querySelectorAll('.history-item');
+  historyItems.forEach(function (item) {
+    item.addEventListener('click', function () {
+      const sessionId = this.getAttribute('data-id');
+      openModal(sessionId);
+    });
+  });
+
+  // Attacher les gestionnaires d'événements aux icônes de suppression
+  const deleteIcons = document.querySelectorAll('.delete-icon');
+  deleteIcons.forEach(function (icon) {
+    icon.addEventListener('click', function (event) {
+      event.stopPropagation(); // Empêche le clic de remonter au parent
+      const sessionId = this.getAttribute('data-id');
+      deleteSession(sessionId);
+    });
+  });
+
+});
+
+// Fonction pour ouvrir la fenêtre modale
+function openModal(sessionId) {
+  // Ici, tu pourrais faire une requête Ajax pour charger la conversation complète
+  fetch(`/session/${sessionId}`)
+    .then(response => response.json())
+    .then(data => {
+      let modalContent = '';
+      data.messages.forEach(message => {
+        modalContent += `<strong>${message.role === 'user' ? 'Utilisateur' : 'IA'}:</strong> ${message.content}<br>`;
+      });
+      document.getElementById('modal-body').innerHTML = modalContent;
+      document.getElementById('conversationModal').style.display = 'block';
+    });
+}
+
+// Fonction pour fermer la fenêtre modale
+function closeModal() {
+  document.getElementById('conversationModal').style.display = 'none';
+}
+
+function deleteSession(sessionId) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer cette session ?')) {
+    fetch(`/delete-session/${sessionId}`, {
+      method: 'DELETE',
+    })
+      .then(response => {
+        if (response.ok) {
+          // Supprimer l'élément de l'historique de la page
+          document.querySelector(`.history-item[data-id="${sessionId}"]`).remove();
+        } else {
+          console.error('Erreur lors de la suppression de la session');
+        }
+      })
+      .catch(error => {
+        console.error('Erreur lors de la suppression :', error);
+      });
+  }
+}
+
+
+// Fermer la modale en cliquant en dehors de la boîte de dialogue
+window.onclick = function (event) {
+  const modal = document.getElementById('conversationModal');
+  if (event.target === modal) {
+    modal.style.display = 'none';
+  }
+}

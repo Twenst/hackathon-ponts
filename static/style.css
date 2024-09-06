@@ -18,13 +18,14 @@
   --loader-bullet-size: 6px;
 }
 
-.dark {
-  --body-background-color: #303030;
-  --main-background-color: #262626;
+body.dark-theme {
+  --body-background-color: #262626;
+  --main-background-color: #303030;
   --main-color: #eceae4;
   --max-body-width: 700px;
-  --border-color: #cccccc;
-  --secondary-color: #81764c;
+  --border-color: #414141;
+  --message-ai-color: #747474;
+  --secondary-color: #64a279;
   --loader-bullet-size: 6px;
 }
 
@@ -37,6 +38,7 @@ body {
   padding: 0;
   margin: 0;
   font-family: 'SUSE';
+  color: var(--main-color);
 }
 
 .main-container {
@@ -46,6 +48,7 @@ body {
   color: var(--main-color);
   padding: 50px;
   margin: 0 auto;
+  align-self: center;
 }
 
 .header {
@@ -67,22 +70,22 @@ body {
 .message {
   border: 3px solid var(--message-ai-color);
   background-color: var(--message-ai-color);
-  border-radius: 15px;
+  border-radius: 12px 12px 12px 0px;
   padding: 10px 15px;
-
+  color: var(--main-color);
 }
 
 .message-human {
   border: 3px solid var(--secondary-color);
   background-color: var(--secondary-color);
   transform: translateX(33%);
+  border-radius: 12px 12px 0px 12px;
 }
 
 .prompt-container {
   position: fixed;
   bottom: 0px;
   left: 0%;
-  transform: translateX();
   width: 100%;
   display: flex;
   align-items: center;
@@ -100,14 +103,16 @@ body {
   flex-grow: 1;
   border: 3px solid var(--border-color);
   background-color: var(--border-color);
-  border-radius: 15px;
+  border-radius: 12px;
   padding: 15px;
+  color: var(--main-color);
 }
 
 .button {
   border: 3px solid var(--border-color);
+  color: var(--main-color);
   padding: 7px;
-  border-radius: 15px;
+  border-radius: 12px;
   background-color: var(--border-color);
 }
 
@@ -215,4 +220,111 @@ body {
 #reset-button {
   display: none;
   /* Cache le bouton au chargement de la page */
+}
+
+.fade-text span {
+  opacity: 0;
+  display: inline;
+  /* Utiliser inline pour les mots */
+  animation: fadeIn 0.2s forwards;
+  /* Durée de l'animation plus longue pour les mots */
+  animation-delay: calc(0.1s * var(--word-index));
+  /* Délai progressif entre les mots */
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+    /* Les lettres montent légèrement */
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    /* Les lettres se stabilisent */
+  }
+}
+
+.file-info {
+  color: var(--main-color);
+}
+
+/* CSS DE TRANIE POUR L'HIST */
+/* Ajoute du style pour le conteneur principal */
+.main-container-hist {
+  display: flex;
+}
+
+/* Section historique des conversations */
+.history-container {
+  width: 20%;
+  background-color: var(--main-background-color);
+  padding: 10px;
+  border-right: 2px solid var(--border-color);
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.delete-icon {
+  color: red;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.delete-icon:hover {
+  color: darkred;
+}
+
+
+/* Section chat */
+.chat-container {
+  width: 70%;
+  padding: 20px;
+}
+
+/* Style pour la fenêtre modale */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
