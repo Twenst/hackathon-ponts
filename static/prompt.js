@@ -252,3 +252,23 @@ window.onclick = function (event) {
     modal.style.display = 'none';
   }
 }
+
+const applyFadeEffect = (messageElement) => {
+  const text = messageElement.innerText;
+  messageElement.innerHTML = ''; // Efface le texte actuel
+
+  // Diviser le texte en mots, en tenant compte des espaces
+  const words = text.split(' ');
+
+  words.forEach((word, index) => {
+    const span = document.createElement('span');
+    span.textContent = word; // Ajouter le mot entier
+    span.style.setProperty('--word-index', index); // Définit l'index pour le délai de chaque mot
+    messageElement.appendChild(span);
+
+    // Ajouter un espace après chaque mot sauf le dernier
+    if (index < words.length - 1) {
+      messageElement.appendChild(document.createTextNode(' '));
+    }
+  });
+};
