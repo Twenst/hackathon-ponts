@@ -156,17 +156,48 @@ def hello_world():
     return render_template('index.html')
 
 
-def read_pdf(filename):
-    context = ""
-    with open(filename, 'rb') as pdf_file:  
+def read_pdf_in_chunks(filename, chunk_size=1000):
+    context_list = []
+    
+    with open(filename, 'rb') as pdf_file:
+        reader = PyPDF2.PdfReader(pdf_file)
+        
+        text = ''
+        for page in reader.pages:
+            page_text = page.extract_text().replace("\n", " ")
+            text = text + page_text
+
+        while text:
+            chunk = text[0:min(chunk_size-1,len(text)-1)]
+            context_list.append(chunk)
+            text = text[chunk_size:]
+    
+    return context_list
+
+""" def read_pdf_in_chunks(filename, chunk_size=4000):
+    context_list = []
+    current_chunk = ""
+    
+    with open(filename, 'rb') as pdf_file:
         reader = PyPDF2.PdfReader(pdf_file)
         num_pages = len(reader.pages)
+        
         for page_num in range(num_pages):
             page = reader.pages[page_num]
             page_text = page.extract_text().replace("\n", " ")
-            context += page_text
-    return context
-
+            
+            # Ajouter du texte à l'actuel segment en vérifiant la taille
+            if len(current_chunk) + len(page_text) > chunk_size:
+                context_list.append(current_chunk)
+                current_chunk = page_text  # Commencer un nouveau segment
+            else:
+                current_chunk += page_text
+        
+        # Ajouter le dernier segment s'il n'est pas vide
+        if current_chunk:
+            context_list.append(current_chunk)
+    
+    return context_list """
 
 def gt3_completion_historiq(historiq_conv):
     response = client.chat.completions.create(
@@ -189,17 +220,21 @@ def interpret_file():
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(file_path)
 
-    print(file_path)
-
     try:
-        text = read_pdf(file_path)
+        pdf_chunks = read_pdf_in_chunks(file_path)
+        print(pdf_chunks)
+
         session['conversation'] = session['conversation'] + [{
             "role": "system",
-            "content": (
-                f"Tu es un professeur spécialisé dans les questions autour de "
-                f"ce texte: {text}"
-            )
+            "content": "Tu es un professeur spécialisé dans les questions autour de ce texte:"
         }]
+
+        # Traiter chaque chunk en appelant l'API pour chaque partie du texte
+        for chunk in pdf_chunks:
+            session['conversation'] = session['conversation'] + [{
+                "role": "system",
+                "content": chunk
+            }]
 
     except Exception as e:
         return jsonify({
@@ -211,6 +246,7 @@ def interpret_file():
         'message': 'Fichier téléchargé et traité avec succès.',
         'filename': file.filename,
     }), 200
+
 
 
 @app.route('/prompt', methods=['POST'])
