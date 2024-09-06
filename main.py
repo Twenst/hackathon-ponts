@@ -115,7 +115,7 @@ def interpret_file():
                 ),
             }
         ]
-
+    
     except Exception as e:
         return jsonify({"message": "Erreur lors du traitement du fichier.", "error": str(e)}), 500
 
