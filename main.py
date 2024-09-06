@@ -5,18 +5,18 @@ import PyPDF2
 import os
 import openai
 from openai import OpenAI
+
 client = OpenAI()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.organization = os.getenv("OPENAI_ORGANIZATION")
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = "uploads"
 
 
 def gt3_completion(question_user):
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": question_user}]
+        model="gpt-3.5-turbo", messages=[{"role": "user", "content": question_user}]
     )
     return response.choices[0].message.content
 
@@ -62,15 +62,15 @@ text = (
 )
 
 
-def ask_question_to_pdf(question_user='Peux-tu me résumer ce texte ?'):
+def ask_question_to_pdf(question_user="Peux-tu me résumer ce texte ?"):
     print(gt3_completion(question_user + text))
     return None
 
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_COOKIE_SECURE'] = False
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_COOKIE_SECURE"] = False
 
 # Routes - VERSION texte cours de test ###################
 
@@ -152,70 +152,45 @@ app.config['SESSION_COOKIE_SECURE'] = False
 
 @app.route("/")
 def hello_world():
-    session['conversation'] = []
-    return render_template('index.html')
+    session["conversation"] = []
+    return render_template("index.html")
 
 
 def read_pdf_in_chunks(filename, chunk_size=1000):
     context_list = []
-    
-    with open(filename, 'rb') as pdf_file:
+
+    with open(filename, "rb") as pdf_file:
         reader = PyPDF2.PdfReader(pdf_file)
-        
-        text = ''
+
+        text = ""
         for page in reader.pages:
             page_text = page.extract_text().replace("\n", " ")
             text = text + page_text
 
         while text:
-            chunk = text[0:min(chunk_size-1,len(text)-1)]
+            chunk = text[0 : min(chunk_size - 1, len(text) - 1)]
             context_list.append(chunk)
             text = text[chunk_size:]
-    
+
     return context_list
 
-""" def read_pdf_in_chunks(filename, chunk_size=4000):
-    context_list = []
-    current_chunk = ""
-    
-    with open(filename, 'rb') as pdf_file:
-        reader = PyPDF2.PdfReader(pdf_file)
-        num_pages = len(reader.pages)
-        
-        for page_num in range(num_pages):
-            page = reader.pages[page_num]
-            page_text = page.extract_text().replace("\n", " ")
-            
-            # Ajouter du texte à l'actuel segment en vérifiant la taille
-            if len(current_chunk) + len(page_text) > chunk_size:
-                context_list.append(current_chunk)
-                current_chunk = page_text  # Commencer un nouveau segment
-            else:
-                current_chunk += page_text
-        
-        # Ajouter le dernier segment s'il n'est pas vide
-        if current_chunk:
-            context_list.append(current_chunk)
-    
-    return context_list """
 
 def gt3_completion_historiq(historiq_conv):
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=historiq_conv
+        model="gpt-3.5-turbo", messages=historiq_conv
     )
     return response.choices[0].message.content
 
 
-@app.route('/file-transfer', methods=['POST'])
+@app.route("/file-transfer", methods=["POST"])
 def interpret_file():
-    if 'file' not in request.files:
-        return jsonify({'message': 'Aucun fichier trouvé.'}), 400
+    if "file" not in request.files:
+        return jsonify({"message": "Aucun fichier trouvé."}), 400
 
-    file = request.files['file']
+    file = request.files["file"]
 
-    if file.filename == '':
-        return jsonify({'message': 'Aucun fichier sélectionné.'}), 400
+    if file.filename == "":
+        return jsonify({"message": "Aucun fichier sélectionné."}), 400
 
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(file_path)
@@ -224,94 +199,98 @@ def interpret_file():
         pdf_chunks = read_pdf_in_chunks(file_path)
         print(pdf_chunks)
 
-        session['conversation'] = session['conversation'] + [{
-            "role": "system",
-            "content": "Tu es un professeur spécialisé dans les questions autour de ce texte:"
-        }]
+        session["conversation"] = session["conversation"] + [
+            {
+                "role": "system",
+                "content": (
+                    "Tu es un professeur spécialisé dans"
+                    " les questions autour de ce texte:"
+                ),
+            }
+        ]
 
         # Traiter chaque chunk en appelant l'API pour chaque partie du texte
         for chunk in pdf_chunks:
-            session['conversation'] = session['conversation'] + [{
-                "role": "system",
-                "content": chunk
-            }]
+            session["conversation"] = session["conversation"] + [
+                {"role": "system", "content": chunk}
+            ]
 
     except Exception as e:
-        return jsonify({
-            'message': 'Erreur lors du traitement du fichier.',
-            'error': str(e)
-        }), 500
+        return (
+            jsonify(
+                {"message": "Erreur lors du traitement du fichier.", "error": str(e)}
+            ),
+            500,
+        )
 
-    return jsonify({
-        'message': 'Fichier téléchargé et traité avec succès.',
-        'filename': file.filename,
-    }), 200
+    return (
+        jsonify(
+            {
+                "message": "Fichier téléchargé et traité avec succès.",
+                "filename": file.filename,
+            }
+        ),
+        200,
+    )
 
 
-
-@app.route('/prompt', methods=['POST'])
+@app.route("/prompt", methods=["POST"])
 def handle_prompt():
-    user_prompt = request.form['prompt']
+    user_prompt = request.form["prompt"]
 
-    session['conversation'] = session['conversation'] + [{
-        "role": "user",
-        "content": user_prompt
-    }]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": user_prompt}
+    ]
 
-    historiq_conv = session['conversation']
+    historiq_conv = session["conversation"]
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
-    session['conversation'] = session['conversation'] + [{
-        "role": "assistant",
-        "content": ai_response
-    }]
+    session["conversation"] = session["conversation"] + [
+        {"role": "assistant", "content": ai_response}
+    ]
 
     return jsonify({"answer": ai_response})
 
 
-@app.route('/question', methods=['GET'])
+@app.route("/question", methods=["GET"])
 def handle_click_question_button():
-    session['conversation'] = session['conversation'] + [{
-        "role": "user",
-        "content": "Pose moi une question sur le texte!"
-    }]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": "Pose moi une question sur le texte!"}
+    ]
 
-    historiq_conv = session['conversation']
+    historiq_conv = session["conversation"]
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
-    session['conversation'] = session['conversation'] + [{
-        "role": "user",
-        "content": ai_response
-    }]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": ai_response}
+    ]
 
     return jsonify({"answer": ai_response})
 
 
-@app.route('/answer', methods=['POST'])
+@app.route("/answer", methods=["POST"])
 def answer_click_button():
-    user_prompt = request.form['prompt']
+    user_prompt = request.form["prompt"]
 
-    session['conversation'] = session['conversation'] + [{
-        "role": "user",
-        "content": user_prompt
-    }]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": user_prompt}
+    ]
 
-    historiq_conv = session['conversation']
+    historiq_conv = session["conversation"]
 
     ai_response = gt3_completion_historiq(historiq_conv)
 
-    session['conversation'] = session['conversation'] + [{
-        "role": "user",
-        "content": ai_response
-    }]
+    session["conversation"] = session["conversation"] + [
+        {"role": "user", "content": ai_response}
+    ]
 
     return jsonify({"answer": ai_response})
 
 
-@app.route('/delete-session-cookie', methods=['POST'])
+@app.route("/delete-session-cookie", methods=["POST"])
 def delete_session_cookie():
-    session['conversation'] = []
+    session["conversation"] = []
 
-    return '', 204
+    return "", 204
