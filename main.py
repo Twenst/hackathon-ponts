@@ -156,7 +156,25 @@ def hello_world():
     return render_template('index.html')
 
 
-def read_pdf_in_chunks(filename, chunk_size=4000):
+def read_pdf_in_chunks(filename, chunk_size=1000):
+    context_list = []
+    
+    with open(filename, 'rb') as pdf_file:
+        reader = PyPDF2.PdfReader(pdf_file)
+        
+        text = ''
+        for page in reader.pages:
+            page_text = page.extract_text().replace("\n", " ")
+            text = text + page_text
+
+        while text:
+            chunk = text[0:min(chunk_size-1,len(text)-1)]
+            context_list.append(chunk)
+            text = text[chunk_size:]
+    
+    return context_list
+
+""" def read_pdf_in_chunks(filename, chunk_size=4000):
     context_list = []
     current_chunk = ""
     
@@ -179,8 +197,7 @@ def read_pdf_in_chunks(filename, chunk_size=4000):
         if current_chunk:
             context_list.append(current_chunk)
     
-    return context_list
-
+    return context_list """
 
 def gt3_completion_historiq(historiq_conv):
     response = client.chat.completions.create(
@@ -205,12 +222,18 @@ def interpret_file():
 
     try:
         pdf_chunks = read_pdf_in_chunks(file_path)
+        print(pdf_chunks)
+
+        session['conversation'] = session['conversation'] + [{
+            "role": "system",
+            "content": "Tu es un professeur spécialisé dans les questions autour de ce texte:"
+        }]
 
         # Traiter chaque chunk en appelant l'API pour chaque partie du texte
         for chunk in pdf_chunks:
             session['conversation'] = session['conversation'] + [{
                 "role": "system",
-                "content": f"Tu es un professeur spécialisé dans les questions autour de ce texte: {chunk}"
+                "content": chunk
             }]
 
     except Exception as e:
