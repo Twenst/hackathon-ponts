@@ -158,7 +158,7 @@ def hello_world():
 
 def read_pdf(filename):
     context = ""
-    with open(filename, 'rb') as pdf_file:  
+    with open(filename, 'rb') as pdf_file:
         reader = PyPDF2.PdfReader(pdf_file)
         num_pages = len(reader.pages)
         for page_num in range(num_pages):
